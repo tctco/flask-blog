@@ -16,6 +16,8 @@
     {% else %}
     <title>Flask Blog</title>
     {% endif %}
+
+
 </head>
 
 <!-- navigation bar -->
@@ -53,7 +55,7 @@
     <!-- flash massages -->
     <main role="main" class="container">
         <div class="row">
-            <div class="col-md-8">
+            <div class="col-md-9">
                 {% with messages = get_flashed_messages(with_categories=true) %}
                     {% if messages %}
                         {% for category, message in messages %}
@@ -63,14 +65,15 @@
                         {% endfor %}
                     {% endif %}
                 {% endwith %}
+                {% block js %}{% endblock js %}
                 {% block content %}{% endblock %}
             </div>
             <!-- end of flash messages -->
 
             <!-- side bar -->
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <div class="content-section">
-                    <h3>Our Sidebar</h3>
+                    <h3>Sidebar</h3>
                     <p class='text-muted'>You can put any information here you'd like.
                         <ul class="list-group">
                             <li class="list-group-item list-group-item-light">Latest Posts</li>
@@ -79,6 +82,12 @@
                             <li class="list-group-item list-group-item-light">etc</li>
                         </ul>
                     </p>
+                    <footer>
+                        <small class="text-center">
+                        <p class="text-muted"><i>To do something interesting<br>To achieve something great<i><br>You can contact the author via <a href="mailto:tctco2018@gmail.com">tctco2018@gmail.com</a>.</p>
+                        </small>
+                    </footer>
+
                 </div>
             </div>
             <!-- end of side bar -->
@@ -98,6 +107,8 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
         integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
         crossorigin="anonymous"></script>
+    
+
 </body>
 
 </html>

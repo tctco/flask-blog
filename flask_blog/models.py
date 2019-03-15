@@ -3,6 +3,7 @@ from flask_blog import db, login_manager
 from flask_login import UserMixin
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from flask import current_app
+import random
 
 
 @login_manager.user_loader
@@ -14,7 +15,7 @@ class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key = True)
     username = db.Column(db.String(20), unique = True, nullable = False)
     email = db.Column(db.String(120), unique = True, nullable = False)
-    image_file = db.Column(db.String(20), nullable = False, default = 'default.png')
+    image_file = db.Column(db.String(20), nullable = False, default = f'default{random.randint(0,9)}.png')
     password = db.Column(db.String(60), nullable = False)
     posts = db.relationship('Post', backref = "author", lazy = True)
 
@@ -33,6 +34,7 @@ class User(db.Model, UserMixin):
         except:
             return None
         return User.query.get(user_id)
+
 
 
 class Post(db.Model):

@@ -1,4 +1,5 @@
-from flask_blog import create_app
+from flask_blog import create_app, db
+
 
 app = create_app()
 

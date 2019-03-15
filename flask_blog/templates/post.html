@@ -1,5 +1,8 @@
 {% extends "layout.html" %}
 {% block content %}
+
+
+
 <article class="media content-section">
     <img class="rounded-circle article-img" src="{{ url_for('static', filename='profile_pics/' + post.author.image_file) }}" alt="">
     <div class="media-body">
@@ -14,7 +17,9 @@
             {% endif %}
         </div>
         <h2 class="article-title">{{ post.title }}</h2>
-        <p class="article-content">{{ post.content }}</p>
+        <div class="content" id="fancy-content">
+          <p class="article-content">{{ post.content|markdown|safe }}</p>
+        </div>
     </div>
 </article>
 <!-- Modal -->

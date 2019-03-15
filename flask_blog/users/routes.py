@@ -3,7 +3,7 @@ from flask_login import login_user, current_user, logout_user, login_required
 from flask_blog import db, bcrypt
 from flask_blog.models import User, Post
 from flask_blog.users.forms import RegistrationForm, LoginForm, UpdateAccountField, RequestResetForm, ResetPasswordForm
-from flask_blog.users.utils import save_picture, send_reset_email
+from flask_blog.users.utils import save_picture, send_reset_email, delete_picture
 
 
 users = Blueprint('users', __name__)
@@ -57,9 +57,12 @@ def logout():
 def account():
     form = UpdateAccountField()
     if form.validate_on_submit():
+
         if form.picture.data:
+            original_picture = current_user.image_file
             picture_file = save_picture(form.picture.data)
             current_user.image_file = picture_file
+            delete_picture(original_picture)
         current_user.username = form.username.data
         current_user.email = form.email.data
         db.session.commit()

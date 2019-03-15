@@ -4,6 +4,7 @@ from flask_bcrypt import Bcrypt
 from flask_login import LoginManager
 from flask_mail import Mail
 from flask_blog.config import Config
+from flaskext.markdown import Markdown 
 
 
 db = SQLAlchemy()
@@ -16,6 +17,7 @@ mail = Mail()
 
 
 
+
 def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(Config)
@@ -24,6 +26,7 @@ def create_app(config_class=Config):
     bcrypt.init_app(app)
     login_manager.init_app(app)
     mail.init_app(app)
+    Markdown(app)
 
     from flask_blog.users.routes import users
     from flask_blog.posts.routes import posts
