@@ -6,8 +6,9 @@ from flask_mail import Message
 from flask_blog import mail
 
 def delete_picture(original_picture):
-    picture_path = os.path.join(current_app.root_path, 'static/profile_pics', original_picture)
-    os.remove(picture_path)
+    if 'default' not in original_picture:
+        picture_path = os.path.join(current_app.root_path, 'static/profile_pics', original_picture)
+        os.remove(picture_path)
 
 
 def save_picture(form_picture):
