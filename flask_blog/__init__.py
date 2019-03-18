@@ -5,6 +5,7 @@ from flask_login import LoginManager
 from flask_mail import Mail
 from flask_blog.config import Config
 from flaskext.markdown import Markdown 
+from flask_socketio import SocketIO
 
 
 db = SQLAlchemy()
@@ -13,6 +14,7 @@ login_manager = LoginManager()
 login_manager.login_view = 'users.login'
 login_manager.login_message_category = 'warning'
 mail = Mail()
+socketio = SocketIO()
 
 
 
@@ -28,13 +30,18 @@ def create_app(config_class=Config):
     mail.init_app(app)
     Markdown(app)
 
+    socketio.init_app(app)
+
     from flask_blog.users.routes import users
     from flask_blog.posts.routes import posts
     from flask_blog.main.routes import main
     from flask_blog.errors.handlers import errors
+    from flask_blog.chatroom.routes import chatroom
     app.register_blueprint(users)
     app.register_blueprint(posts)
     app.register_blueprint(main)
     app.register_blueprint(errors)
+
+    app.register_blueprint(chatroom)
 
     return app

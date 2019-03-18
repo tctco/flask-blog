@@ -1,0 +1,58 @@
+{% extends 'layout.html' %}
+{% block content %}
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.4.8/socket.io.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+
+<h2>chatroom</h2>
+
+<script type="text/javascript">
+    $(document).ready(function () {
+
+        var socket = io.connect('http://127.0.0.1:5000');
+        var username = '';
+        var room = '';
+        var data = {'username':username, 'room':room};
+
+        socket.on('connect', function () {
+            socket.send('you have connected');
+        })
+
+        socket.on('message', function (message) {
+            var message = JSON.parse(message);
+            $("#messages").append('<li>' +" " + message['talker'] + ': ' + message['time'] + '  ' + message['message'] + '</li>');
+            username = message['talker'];
+            console.log('Received the message');
+        })
+
+        $('#sendbutton').on('click', function () {
+            socket.send($('#myMessage').val());
+            $('#myMessage').val('');
+        })
+
+        $('#joinRoom').on('click', function(){
+            if(room = $('#roomName').val()){
+                socket.join(data);
+                $('#roomName').val('');
+            }
+        })
+
+        $("#leaveRoom").on('click', function(){
+            socket.leave(data);
+        })
+    })
+</script>
+
+<ul id="messages">
+    {% for msg in messages %}
+    <li>{{ msg.time_stamp }}{{ msg.message }} By: {{ msg.author }}</li>
+    {% endfor %}
+</ul>
+
+<input type="text" id="myMessage">
+<button id="sendbutton">Send</button>
+
+<input type="text" id="roomName">
+<button id="joinRoom">Join Room</button>
+
+<button id="leaveRoom">Leave Room</button>
+{% endblock content %}
