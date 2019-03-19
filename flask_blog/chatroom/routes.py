@@ -4,44 +4,89 @@ from flask_blog import socketio, db
 from flask_socketio import send, join_room, leave_room
 from flask_login import login_required, current_user
 import json
-
+import inspect#adding info
+from datetime import datetime
 
 chatroom = Blueprint('chatroom', __name__)
 
-@socketio.on('connected')
-def connected():
-    print(f'{request.namespace.socket.sessid} connected')
-    clients.append(request.name)
 
 @chatroom.route('/chatroom', methods=['POST', 'GET'])
 @login_required
 def chatroom_homepage():
-    messages = chatHistory.query.all()
-    return render_template('chatroom.html', messages=messages)
+    return render_template('chatroom.html')
+    
 
-@socketio.on('message')
-def handleMessage(msg):
-    print('Message: '+ msg)
-
-    message = chatHistory(message=msg, talker=current_user)
-    db.session.add(message)
-    db.session.commit()
-
-    d = {'message':message.message, 'talker':message.talker.username, 'time':message.time_stamp.strftime(r'%Y-%m-%d %H:%M')}
-    d = json.dumps(d)
-    send(d, broadcast=True)
+@chatroom.route('/chatroom/history/<string:room_name>')
+@login_required
+def chatroom_history(room_name):
+    messages = chatHistory.query.filter_by(room_name=room_name).all()
+    return render_template('history_page.html', room_name=room_name, messages=messages)
 
 
-@socketio.on('join')
-def on_join(data):
-    username = data['username']
-    room = data['room']
-    join_room(room)
-    send(username + ' has entered the room.', room=room)
+socketio.room_users = {}#room:users
+socketio.reqid_info = {}#sid{room, talker}
+@socketio.on('connect')
+def connect_event_handler():
+    @socketio.on('join')
+    def talker_join_handler(data):
+        talker = current_user.username
+        room = data['room']
+        print(room)
+        
+        try:
+            original_room = socketio.reqid_info[request.sid]['room']
+            if room != original_room:
+                leave_room(original_room)
+        except:
+            pass
 
-@socketio.on('leave')
-def on_leave(data):
-    username = data['username']
-    room = data['room']
-    leave_room(room)
-    send(username + ' has left the room.', room=room)
+        susr = f'{talker}--{request.sid}'
+        socketio.room_users.setdefault(room, []).append(susr)#append room if there isn't a room
+        socketio.reqid_info.setdefault(request.sid, {}).update({
+            'room': room,
+            'talker': talker,
+        })
+        join_room(room)
+
+            
+
+        message = f'#=>{datetime.now()}:{susr} action:{inspect.stack()[0][-4:-2]} room:{room}'
+        print(message)
+        talkers = []
+        for item_users in socketio.room_users.values():
+            if item_users not in talkers:
+                talkers.extend(item_users)
+        print('#=>current users: ', talkers)
+        socketio.emit('sys broadcast', {'message':message})
+    
+    
+    @socketio.on('disconnect')
+    def disconnect_handler():
+        talker = socketio.reqid_info[request.sid]['talker']
+        room = socketio.reqid_info[request.sid]['room']
+        susr = f'{talker}--{request.sid}'
+        socketio.room_users[room].remove(susr)
+        message = f'#=>{datetime.now()}:{susr} action:{inspect.stack()[0][-4:-2]} room:{room}'
+        print(message)
+        socketio.emit('sys broadcast', {'message':message})
+        leave_room(room)
+
+
+    @socketio.on('message')
+    def message_handler(msg): 
+
+        room = socketio.reqid_info[request.sid]['room']   
+
+        print('Message: '+ msg)
+
+        message = chatHistory(message=msg, talker=current_user, room_name=room)
+        db.session.add(message)
+        db.session.commit()
+
+        d = {'message':message.message, 'talker':message.talker.username, 'time':message.time_stamp.strftime(r'%Y-%m-%d %H:%M')}
+        d = json.dumps(d)
+
+        send(d, broadcast=True, room=room)
+
+
+

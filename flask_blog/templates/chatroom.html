@@ -8,51 +8,47 @@
 <script type="text/javascript">
     $(document).ready(function () {
 
+
         var socket = io.connect('http://127.0.0.1:5000');
-        var username = '';
-        var room = '';
-        var data = {'username':username, 'room':room};
+        
 
         socket.on('connect', function () {
+            socket.emit('join', {'room': 'room0'});
             socket.send('you have connected');
         })
 
         socket.on('message', function (message) {
             var message = JSON.parse(message);
             $("#messages").append('<li>' +" " + message['talker'] + ': ' + message['time'] + '  ' + message['message'] + '</li>');
-            username = message['talker'];
+            talker = message['talker'];
             console.log('Received the message');
         })
 
-        $('#sendbutton').on('click', function () {
+        $('#sendButton').on('click', function () {
             socket.send($('#myMessage').val());
             $('#myMessage').val('');
         })
 
-        $('#joinRoom').on('click', function(){
-            if(room = $('#roomName').val()){
-                socket.join(data);
-                $('#roomName').val('');
-            }
+        $('#room').on('click', function(){
+            socket.emit('join', {'room': $('#roomName').val()});
+            $('room').text('Leave Room');
         })
 
-        $("#leaveRoom").on('click', function(){
-            socket.leave(data);
+        $('#historyButton').on('click', function(){
+            socket.emit('check history', $('#roomName').val());
         })
+
     })
 </script>
 
-<ul id="messages">
-    {% for msg in messages %}
-    <li>{{ msg.time_stamp }}{{ msg.message }} By: {{ msg.author }}</li>
-    {% endfor %}
-</ul>
+<ul id="messages"></ul>
+
 
 <input type="text" id="myMessage">
-<button id="sendbutton">Send</button>
-
+<button id="sendButton">Send</button>
 <input type="text" id="roomName">
-<button id="joinRoom">Join Room</button>
 
-<button id="leaveRoom">Leave Room</button>
+<!-- <input type="text" id="roomName"> -->
+<button id="room">Join Room</button>
+
 {% endblock content %}

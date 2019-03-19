@@ -55,4 +55,5 @@ class chatHistory(db.Model):
     id = db.Column('id', db.Integer, primary_key=True)
     message = db.Column('message', db.String(500))
     time_stamp = db.Column('time_stamp', db.DateTime, default=datetime.utcnow)
+    room_name = db.Column('room_name', db.String)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)

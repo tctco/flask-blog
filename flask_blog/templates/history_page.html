@@ -1,0 +1,9 @@
+{% extends "layout.html" %}
+{% block content %}
+<h2>{{ room_name }}</h2>
+<li>
+    {% for msg in messages %}
+        <ul>{{ msg.message }} at {{ msg.time_stamp }} by {{ msg.talker.username }}</ul>
+    {% endfor %}
+</li>
+{% endblock content %}
