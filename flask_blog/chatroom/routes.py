@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request
 from flask_blog.models import chatHistory
 from flask_blog import socketio, db
-from flask_socketio import send, join_room, leave_room
+from flask_socketio import send, emit, join_room, leave_room
 from flask_login import login_required, current_user
 import json
 import inspect#adding info
@@ -41,7 +41,13 @@ def connect_event_handler():
             pass
 
         susr = f'{talker}--{request.sid}'
-        socketio.room_users.setdefault(room, []).append(susr)#append room if there isn't a room
+        
+        #add talker into talker list
+        socketio.room_users.setdefault(room, [])
+        if talker not in socketio.room_users[room]:
+            socketio.room_users[room].append(talker)
+
+        # socketio.room_users.setdefault(room, []).append(susr)#append room if there isn't a room
         socketio.reqid_info.setdefault(request.sid, {}).update({
             'room': room,
             'talker': talker,
@@ -62,10 +68,13 @@ def connect_event_handler():
     
     @socketio.on('disconnect')
     def disconnect_handler():
-        talker = socketio.reqid_info[request.sid]['talker']
+        talker = current_user.username
         room = socketio.reqid_info[request.sid]['room']
         susr = f'{talker}--{request.sid}'
-        socketio.room_users[room].remove(susr)
+        try:
+            socketio.room_users[room].remove(talker)
+        except:
+            pass
         message = f'#=>{datetime.now()}:{susr} action:{inspect.stack()[0][-4:-2]} room:{room}'
         print(message)
         socketio.emit('sys broadcast', {'message':message})
@@ -83,10 +92,15 @@ def connect_event_handler():
         db.session.add(message)
         db.session.commit()
 
-        d = {'message':message.message, 'talker':message.talker.username, 'time':message.time_stamp.strftime(r'%Y-%m-%d %H:%M')}
+        d = {'message_type': 'message', 'message':message.message, 'talker':message.talker.username, 'time':message.time_stamp.strftime(r'%Y-%m-%d %H:%M')}
         d = json.dumps(d)
 
         send(d, broadcast=True, room=room)
 
 
-
+    @socketio.on('get room talkers')
+    def online_talkers_handler(room_name):
+        print('room name', room_name)
+        message = str(socketio.room_users[room_name])
+        print('users in room: ', message)
+        emit('sys broadcast', {'message': 'sys: '+ message})

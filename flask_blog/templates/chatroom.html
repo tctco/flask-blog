@@ -10,18 +10,27 @@
 
 
         var socket = io.connect('http://127.0.0.1:5000');
-        
+        var roomName = 'room0';
 
         socket.on('connect', function () {
             socket.emit('join', {'room': 'room0'});
             socket.send('you have connected');
         })
 
+
+        socket.on('sys broadcast', function(sys_message){
+            $('#systemInfo').append('<li>' + sys_message['message'] + '</li>');
+        })
+
+
         socket.on('message', function (message) {
             var message = JSON.parse(message);
+
+
             $("#messages").append('<li>' +" " + message['talker'] + ': ' + message['time'] + '  ' + message['message'] + '</li>');
             talker = message['talker'];
             console.log('Received the message');
+
         })
 
         $('#sendButton').on('click', function () {
@@ -30,12 +39,15 @@
         })
 
         $('#room').on('click', function(){
+            roomName = $('#roomName').val();
             socket.emit('join', {'room': $('#roomName').val()});
             $('room').text('Leave Room');
         })
 
-        $('#historyButton').on('click', function(){
-            socket.emit('check history', $('#roomName').val());
+
+
+        $('#btnAllRoomTalkers').on('click', function(room_name){
+            socket.emit('get room talkers', roomName);
         })
 
     })
@@ -47,8 +59,11 @@
 <input type="text" id="myMessage">
 <button id="sendButton">Send</button>
 <input type="text" id="roomName">
-
-<!-- <input type="text" id="roomName"> -->
 <button id="room">Join Room</button>
+
+<button id="btnAllRoomTalkers">All Talkers</button>
+
+<h3>systemInfo</h3>
+<ul id="systemInfo"></ul>
 
 {% endblock content %}
