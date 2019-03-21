@@ -1,7 +1,7 @@
 from flask import render_template, url_for, flash, redirect, request, Blueprint
 from flask_login import login_user, current_user, logout_user, login_required
 from flask_blog import db, bcrypt
-from flask_blog.models import User, Post
+from flask_blog.models import User, Post, Notification
 from flask_blog.users.forms import RegistrationForm, LoginForm, UpdateAccountField, RequestResetForm, ResetPasswordForm
 from flask_blog.users.utils import save_picture, send_reset_email, delete_picture
 
@@ -112,3 +112,50 @@ def reset_token(token):
         flash('Your password has been updated! You can login with your new password!', 'success')
         return redirect(url_for('users.login'))
     return render_template('reset_token.html', title='Reset Password', form=form)
+
+
+@users.route("/user/follow/<username>")
+@login_required
+def follow(username):
+    user = User.query.filter_by(username=username).first()
+    if user is None:
+        flash(f'User {username} does not exist!', 'warning')
+        return redirect(url_for('main.home'))
+    if user == current_user:
+        flash('You cannot follow yourself!')
+        return redirect(url_for('account'))
+    else:
+        current_user.follow(user)
+        flash(f'You are now following {username}!', 'info')
+        friend_invitation = Notification(sender_name=current_user.username, receiver_name=username, 
+            content=f"User {current_user.username} has followed you! Follow him/her so that you can chat and share posts with him/her!")
+        db.session.add(friend_invitation)
+        db.session.commit()
+        return redirect(url_for('users.user_posts', username=username))
+
+
+@users.route("/user/unfollow/<username>")
+@login_required
+def unfollow(username):
+    user = User.query.filter_by(username=username).first()
+    if user is None:
+        flash(f'User {username} does not exist!', 'warning')
+        return redirect(url_for('main.home'))
+    if user == current_user:
+        flash('You cannot unfollow yourself!')
+        return redirect(url_for('account'))
+    else:
+        current_user.unfollow(user)
+        db.session.commit()
+        flash(f'You are not following {username}!', 'info')
+        friend_denial = Notification(sender_name=current_user.username, receiver_name=username,
+            content=f"User {current_user.username} has unfollowed you. You can no longer chat with him. You can also choose to unfollow him/her.")
+        db.session.commit()
+        return redirect(url_for('users.user_posts', username=username))
+
+
+@users.route("/user/<username>/notifications")
+@login_required
+def notifications(username):
+    notifications = Notification.query.filter_by(receiver_name=current_user.username).all()
+    return render_template('notifications.html', notifications=notifications)

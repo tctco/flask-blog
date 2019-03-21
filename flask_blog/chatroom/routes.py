@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request
-from flask_blog.models import chatHistory
+from flask_blog.models import chatHistory, User
 from flask_blog import socketio, db
 from flask_socketio import send, emit, join_room, leave_room
 from flask_login import login_required, current_user

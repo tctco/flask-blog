@@ -1,0 +1,9 @@
+{% extends "layout.html" %}
+{% block content %}
+<h2>Notification page</h2>
+<ul>
+    {% for notification in notifications %}
+        <li>{{ notification.sender_name }}: {{ notification.content }}<br>at: {{ notification.time_stamp }}<br></li>
+    {% endfor %}
+</ul>
+{% endblock content %}
