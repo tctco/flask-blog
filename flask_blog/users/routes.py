@@ -122,8 +122,8 @@ def follow(username):
         flash(f'User {username} does not exist!', 'warning')
         return redirect(url_for('main.home'))
     if user == current_user:
-        flash('You cannot follow yourself!')
-        return redirect(url_for('account'))
+        flash('You cannot follow yourself!', 'warning')
+        return redirect(url_for('users.account'))
     else:
         current_user.follow(user)
         flash(f'You are now following {username}!', 'info')
@@ -154,8 +154,8 @@ def unfollow(username):
         return redirect(url_for('users.user_posts', username=username))
 
 
-@users.route("/user/<username>/notifications")
+@users.route("/user/notifications")
 @login_required
-def notifications(username):
+def notifications():
     notifications = Notification.query.filter_by(receiver_name=current_user.username).all()
     return render_template('notifications.html', notifications=notifications)

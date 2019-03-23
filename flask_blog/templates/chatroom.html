@@ -4,6 +4,7 @@
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
 
 <h2>chatroom</h2>
+<h3 id="currentRoom">Default room: room0</h3>
 
 <script type="text/javascript">
     $(document).ready(function () {
@@ -11,10 +12,12 @@
 
         var socket = io.connect('http://127.0.0.1:5000');
         var roomName = 'room0';
+        
 
         socket.on('connect', function () {
             socket.emit('join', {'room': 'room0'});
-            socket.send('you have connected');
+            $('#currentRoom').text('current room: '+roomName);
+            $('#systemInfo').append('<li>sys: you have connected!</li>')
         })
 
 
@@ -25,7 +28,6 @@
 
         socket.on('message', function (message) {
             var message = JSON.parse(message);
-
 
             $("#messages").append('<li>' +" " + message['talker'] + ': ' + message['time'] + '  ' + message['message'] + '</li>');
             talker = message['talker'];
@@ -40,19 +42,34 @@
 
         $('#room').on('click', function(){
             roomName = $('#roomName').val();
+            alert(roomName);
             socket.emit('join', {'room': $('#roomName').val()});
-            $('room').text('Leave Room');
+            $('#currentRoom').text('current room: '+roomName);
         })
 
 
 
-        $('#btnAllRoomTalkers').on('click', function(room_name){
+        $('#btnAllRoomTalkers').on('click', function(){
             socket.emit('get room talkers', roomName);
         })
 
+
+        var private_socket = io.connect('http://127.0.0.1:5000/private')
+
+        $('#btnPrivateSend').on('click', function(){
+            var friendName = $('#friendName').val();
+            var privateMessage = $('#privateMessage').val();
+            private_socket.emit('private message', {'friend_name':friendName, 'private_message':privateMessage});
+        })
+
+        private_socket.on('new private message', function(msg){
+            alert("you have a new private message:"+msg);
+        })
+
+
+
     })
 </script>
-
 <ul id="messages"></ul>
 
 
@@ -62,9 +79,11 @@
 <input type="text" id="roomName">
 <button id="room">Join Room</button>
 <br>
-<!-- adding -->
-<input type="text", id="friendName">
-<button></button>
+
+<br>
+Sent to: <input type="text" id="friendName">
+Private Message: <input type="text" id="privateMessage">
+<button id="btnPrivateSend">Send to Your Friend</button>
 
 <button id="btnAllRoomTalkers">All Talkers</button>
 
